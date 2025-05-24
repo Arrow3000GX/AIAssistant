@@ -275,7 +275,7 @@
   <div class="chat-container">
 >>>>>>> 49eed0b54c1015ae2617e125debffd2b085f8f17
     <div class="header">
-      <button id="toggleTheme" class="toggle-btn" aria-pressed="false" aria-label="Toggle dark mode">🌙 Dark Mode</button>
+      <button id="toggleTheme" class="toggle-btn" aria-pressed="false" aria-label="Toggle dark mode"> Dark Mode</button>
     </div>
     <div id="chat" class="messages" aria-live="polite" aria-relevant="additions"></div>
     <form id="form" class="form-area" role="search" aria-label="Send a message">
@@ -295,14 +295,14 @@
     // Load saved theme preference
     if (localStorage.getItem("theme") === "dark") {
       document.body.classList.add("dark");
-      toggleThemeBtn.textContent = "☀️ Light Mode";
+      toggleThemeBtn.textContent = "Light Mode";
       toggleThemeBtn.setAttribute("aria-pressed", "true");
     }
 
     toggleThemeBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark");
       const isDark = document.body.classList.contains("dark");
-      toggleThemeBtn.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+      toggleThemeBtn.textContent = isDark ? "Light Mode" : "Dark Mode";
       toggleThemeBtn.setAttribute("aria-pressed", isDark.toString());
       localStorage.setItem("theme", isDark ? "dark" : "light");
     });

@@ -72,10 +72,28 @@
     const form = document.getElementById("chatForm");
     const input = document.getElementById("userInput");
 
+    // Replace these with your own Azure details
     const AZURE_API_KEY = "AAfjitrqlau6uN6Z3n8VWQMj9cCzRh8azSkovekZG85srRD6MC01JQQJ99BDACmepeSXJ3w3AAAFACOGysZT";
     const AZURE_ENDPOINT = "https://seerapi.cognitiveservices.azure.com/";
-    const DEPLOYMENT_NAME = "gpt35" // your deployment name
+    const DEPLOYMENT_NAME = "gpt35";
     const API_VERSION = "2023-03-15-preview";
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userMsg = input.value.trim();
+      if (!userMsg) return;
+
+      appendMessage("user", userMsg);
+      input.value = "";
+
+      try {
+        const botMsg = await getBotResponse(userMsg);
+        appendMessage("bot", botMsg);
+      } catch (err) {
+        console.error(err);
+        appendMessage("bot", "⚠️ Error getting response.");
+      }
+    });
 
     async function getBotResponse(message) {
       const response = await fetch(`${AZURE_ENDPOINT}openai/deployments/${DEPLOYMENT_NAME}/chat/completions?api-version=${API_VERSION}`, {
@@ -93,16 +111,6 @@
       const data = await response.json();
       return data.choices[0].message.content;
     }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const userMsg = input.value;
-      appendMessage("user", userMsg);
-      input.value = "";
-
-      const botMsg = await getBotResponse(userMsg);
-      appendMessage("bot", botMsg);
-    });
 
     function appendMessage(sender, message) {
       const div = document.createElement("div");

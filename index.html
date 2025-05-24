@@ -95,7 +95,9 @@
     });
 
     async function getBotResponse(message) {
-      const response = await fetch(`${AZURE_ENDPOINT}openai/deployments/${DEPLOYMENT_NAME}/chat/completions?api-version=${API_VERSION}`, {
+      const url = `${AZURE_ENDPOINT}openai/deployments/${DEPLOYMENT_NAME}/chat/completions?api-version=${API_VERSION}`;
+
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -104,22 +106,20 @@
         body: JSON.stringify({
           messages: [{ role: "user", content: message }],
           temperature: 0.7,
-          max_tokens: 1000,
-          top_p: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0
+          max_tokens: 1000
         })
       });
 
       if (!response.ok) {
-        const errorDetails = await response.text();
-        console.error("Azure response error:", errorDetails);
-        throw new Error("Failed to fetch response");
+        const errorText = await response.text();
+        console.error("Azure Error:", errorText);
+        throw new Error(`Azure Error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
       return data.choices[0].message.content.trim();
     }
+
 
     function appendMessage(sender, message) {
       const div = document.createElement("div");

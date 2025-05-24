@@ -113,7 +113,7 @@
 
       if (!response.ok) {
         const errorText = await response.text();
-        appendMessage("bot", `⚠️ Azure Error: ${response.status}\n${errorText}`);
+        appendMessage("bot", `Azure Error: ${response.status}\n${errorText}`);
         throw new Error(`Azure Error: ${response.status}\n${errorText}`);
       }
 

@@ -72,7 +72,6 @@
     const form = document.getElementById("chatForm");
     const input = document.getElementById("userInput");
 
-    // Replace these with your own Azure details
     const AZURE_API_KEY = "AAfjitrqlau6uN6Z3n8VWQMj9cCzRh8azSkovekZG85srRD6MC01JQQJ99BDACmepeSXJ3w3AAAFACOGysZT";
     const AZURE_ENDPOINT = "https://seerapi.cognitiveservices.azure.com/";
     const DEPLOYMENT_NAME = "gpt35";
@@ -90,8 +89,8 @@
         const botMsg = await getBotResponse(userMsg);
         appendMessage("bot", botMsg);
       } catch (err) {
-        console.error(err);
-        appendMessage("bot", "⚠️ Error getting response.");
+        console.error("Error:", err);
+        appendMessage("bot", "⚠️ Error: Could not reach AI.");
       }
     });
 
@@ -104,12 +103,22 @@
         },
         body: JSON.stringify({
           messages: [{ role: "user", content: message }],
-          max_tokens: 1000
+          temperature: 0.7,
+          max_tokens: 1000,
+          top_p: 1,
+          frequency_penalty: 0,
+          presence_penalty: 0
         })
       });
 
+      if (!response.ok) {
+        const errorDetails = await response.text();
+        console.error("Azure response error:", errorDetails);
+        throw new Error("Failed to fetch response");
+      }
+
       const data = await response.json();
-      return data.choices[0].message.content;
+      return data.choices[0].message.content.trim();
     }
 
     function appendMessage(sender, message) {

@@ -96,29 +96,31 @@
 
     async function getBotResponse(message) {
       const url = `${AZURE_ENDPOINT}openai/deployments/${DEPLOYMENT_NAME}/chat/completions?api-version=${API_VERSION}`;
+      const headers = {
+        "Content-Type": "application/json",
+        "api-key": AZURE_API_KEY
+      };
+      const body = JSON.stringify({
+        messages: [{ role: "user", content: message }],
+        max_tokens: 1000
+      });
 
       const response = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": AZURE_API_KEY
-        },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: message }],
-          temperature: 0.7,
-          max_tokens: 1000
-        })
+        headers,
+        body
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Azure Error:", errorText);
-        throw new Error(`Azure Error: ${response.status} - ${errorText}`);
+        appendMessage("bot", `⚠️ Azure Error: ${response.status}\n${errorText}`);
+        throw new Error(`Azure Error: ${response.status}\n${errorText}`);
       }
 
       const data = await response.json();
       return data.choices[0].message.content.trim();
     }
+
 
 
     function appendMessage(sender, message) {

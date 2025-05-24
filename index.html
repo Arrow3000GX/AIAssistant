@@ -22,8 +22,38 @@
     body {
       margin: 0;
       padding: 0;
+<<<<<<< HEAD
       font-family: 'Segoe UI', sans-serif;
       background: var(--light-bg);
+=======
+    }
+    h1{
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      text-align: center;
+      font-size: 100px;
+    }
+    .chat-container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .messages {
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+    .message {
+      margin: 5px 0;
+    }
+    .user { text-align: right; color: #007bff; }
+    .bot { text-align: left; color: #333; }
+    form {
+>>>>>>> 4064095354208b43ed802644c0743de4c70e0506
       display: flex;
       justify-content: center;
       align-items: center;
@@ -216,6 +246,7 @@
   </style>
 </head>
 <body>
+  <h1>CHAT BOT</h1>
   <div class="chat-container">
     <div class="header">
       <button id="toggleTheme" class="toggle-btn" title="Toggle Dark/Light Mode">🌙 Dark Mode</button>

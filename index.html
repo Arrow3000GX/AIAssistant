@@ -40,10 +40,10 @@
     .chat-container {
       background: var(--light-container-bg);
       width: 100%;
-      max-width: 600px;
-      height: 85vh;
-      max-height: 720px;
-      border-radius: 12px;
+      max-width: 800px; /* Fixed insane width */
+      height: 90vh;
+      max-height: 1200px; /* Fixed insane height */
+      border-radius: 120px;
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
       display: flex;
       flex-direction: column;
@@ -93,6 +93,8 @@
       gap: 12px;
       font-size: 15px;
       line-height: 1.5;
+      /* Added for smoother scrolling on all browsers */
+      -webkit-overflow-scrolling: touch;
     }
 
     .message {
@@ -104,6 +106,7 @@
       word-wrap: break-word;
       animation: fadeIn 0.3s ease;
       box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+      position: relative;
     }
 
     .user {
@@ -142,6 +145,48 @@
       to {
         opacity: 1;
         transform: translateY(0);
+      }
+    }
+
+    /* Typing indicator animation for bot's "..." message */
+    .typing {
+      width: 60px;
+      height: 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 8px;
+      background: transparent;
+      box-shadow: none;
+      user-select: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .typing span {
+      display: block;
+      width: 8px;
+      height: 8px;
+      background-color: #999;
+      border-radius: 50%;
+      animation: blink 1.4s infinite both;
+    }
+    .typing span:nth-child(1) {
+      animation-delay: 0s;
+    }
+    .typing span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .typing span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    body.dark .typing span {
+      background-color: #bbb;
+    }
+    @keyframes blink {
+      0%, 80%, 100% {
+        opacity: 0.3;
+      }
+      40% {
+        opacity: 1;
       }
     }
 
@@ -222,192 +267,152 @@
     #micBtn.recording {
       background-color: var(--red);
       animation: pulse 1s infinite;
-      box-shadow: 0 0 15px 5px rgba(220,53,69,0.5);
+      box-shadow: 0 0 8px 2px rgba(220,53,69,0.7);
     }
 
     @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(220,53,69,0.4);
+      0%, 100% {
+        box-shadow: 0 0 8px 2px rgba(220,53,69,0.7);
       }
-      70% {
-        box-shadow: 0 0 0 15px rgba(220,53,69,0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(220,53,69,0);
+      50% {
+        box-shadow: 0 0 12px 4px rgba(220,53,69,1);
       }
     }
 
-    /* Responsive tweaks */
-    @media (max-width: 640px) {
-      .chat-container {
-        height: 90vh;
-        max-height: none;
-        border-radius: 0;
-      }
-
-      .messages {
-        padding: 16px 16px;
-        font-size: 14px;
-      }
-
-      .message {
-        max-width: 85%;
-        padding: 12px 16px;
-      }
-
-      input[type="text"] {
-        font-size: 15px;
-        padding: 12px 16px;
-      }
-
-      button, #micBtn {
-        padding: 12px 16px;
-        font-size: 16px;
-      }
-    }
   </style>
 </head>
 <body>
-  <div class="chat-container" role="main" aria-label="Chatbot interface">
+  <div class="chat-container" role="main" aria-label="Chatbot conversation">
     <div class="header">
-      <button id="toggleTheme" class="toggle-btn" aria-pressed="false" aria-label="Toggle dark mode">🌙 Dark Mode</button>
+      <button class="toggle-btn" id="toggleTheme" aria-pressed="false" aria-label="Toggle dark mode">Dark Mode</button>
     </div>
-    <div class="messages" id="messages" role="log" aria-live="polite" aria-atomic="false"></div>
-    <form id="chatForm" class="form-area" role="form" aria-label="Send message form">
+    <div class="messages" id="messages" tabindex="0" aria-live="polite" aria-relevant="additions"></div>
+    <form id="chatForm" class="form-area" autocomplete="off" role="search" aria-label="Chat input area">
       <input
+        id="chatInput"
         type="text"
-        id="promptInput"
         placeholder="Ask me anything..."
+        aria-label="Type your message here"
+        spellcheck="false"
         autocomplete="off"
-        aria-autocomplete="list"
-        aria-label="Chat input"
-        required
       />
       <button type="submit" aria-label="Send message">Send</button>
-      <button type="button" id="micBtn" aria-label="Start voice input" title="Start voice input">
+      <button type="button" id="micBtn" aria-label="Start voice input">
         🎤
       </button>
     </form>
   </div>
 
   <script>
-    const messagesContainer = document.getElementById('messages');
+    const messagesEl = document.getElementById('messages');
     const chatForm = document.getElementById('chatForm');
-    const promptInput = document.getElementById('promptInput');
+    const chatInput = document.getElementById('chatInput');
     const micBtn = document.getElementById('micBtn');
     const toggleThemeBtn = document.getElementById('toggleTheme');
-    let darkMode = false;
 
-    // Theme toggle
-    toggleThemeBtn.addEventListener('click', () => {
-      darkMode = !darkMode;
-      document.body.classList.toggle('dark', darkMode);
-      toggleThemeBtn.textContent = darkMode ? '☀️ Light Mode' : '🌙 Dark Mode';
-      toggleThemeBtn.setAttribute('aria-pressed', darkMode.toString());
-    });
-
-    // Add message to chat
-    function addMessage(text, sender = 'bot') {
-      const msg = document.createElement('div');
-      msg.classList.add('message', sender);
-      msg.textContent = text;
-      messagesContainer.appendChild(msg);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    // Scroll messages container to bottom
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // Simulate bot response (replace with your actual AI backend call)
-    async function getBotResponse(userText) {
-      // Here you would connect to an AI backend like OpenAI, for now just echo:
-      return `You said: "${userText}"`;
+    // Append a message
+    function appendMessage(text, sender = 'bot') {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message');
+      msgDiv.classList.add(sender === 'user' ? 'user' : 'bot');
+
+      if (text === '...') {
+        // Add typing indicator animation
+        msgDiv.classList.add('typing');
+        msgDiv.innerHTML = '<span></span><span></span><span></span>';
+      } else {
+        msgDiv.textContent = text;
+      }
+
+      messagesEl.appendChild(msgDiv);
+      scrollToBottom();
+    }
+
+    // Example bot response (simulate delay)
+    function getBotResponse(userText) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // Simple echo for demo; replace with real AI call
+          resolve("You said: " + userText);
+        }, 1100);
+      });
     }
 
     chatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const text = promptInput.value.trim();
-      if (!text) return;
-      addMessage(text, 'user');
-      promptInput.value = '';
-      promptInput.disabled = true;
-      micBtn.disabled = true;
+      const userText = chatInput.value.trim();
+      if (!userText) return;
 
-      try {
-        const response = await getBotResponse(text);
-        addMessage(response, 'bot');
-      } catch (err) {
-        addMessage('Oops! Something went wrong.', 'bot');
-        console.error(err);
-      } finally {
-        promptInput.disabled = false;
-        micBtn.disabled = false;
-        promptInput.focus();
-      }
+      appendMessage(userText, 'user');
+      chatInput.value = '';
+      chatInput.disabled = true;
+
+      // Show typing indicator
+      appendMessage('...', 'bot');
+
+      // Simulate bot response
+      const botResponse = await getBotResponse(userText);
+
+      // Remove typing indicator (last message)
+      const lastMsg = messagesEl.querySelector('.message.typing');
+      if (lastMsg) lastMsg.remove();
+
+      appendMessage(botResponse, 'bot');
+
+      chatInput.disabled = false;
+      chatInput.focus();
     });
 
-    // Voice recognition setup
-    let recognition;
-    let recognizing = false;
+    // Dark mode toggle
+    toggleThemeBtn.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark');
+      toggleThemeBtn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+      toggleThemeBtn.setAttribute('aria-pressed', isDark.toString());
+    });
 
+    // Speech recognition (Web Speech API)
+    let recognition;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
       recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-      recognition.onstart = () => {
-        recognizing = true;
-        micBtn.classList.add('recording');
-        micBtn.setAttribute('aria-label', 'Stop voice input');
-      };
+      recognition.addEventListener('result', (event) => {
+        const speechResult = event.results[0][0].transcript;
+        chatInput.value = speechResult;
+      });
 
-      recognition.onend = () => {
-        recognizing = false;
+      recognition.addEventListener('end', () => {
         micBtn.classList.remove('recording');
         micBtn.setAttribute('aria-label', 'Start voice input');
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        recognizing = false;
-        micBtn.classList.remove('recording');
-        micBtn.setAttribute('aria-label', 'Start voice input');
-      };
-
-      recognition.onresult = async (event) => {
-        if (event.results.length > 0) {
-          const transcript = event.results[0][0].transcript.trim();
-          if (transcript.length > 0) {
-            addMessage(transcript, 'user');
-            promptInput.value = '';
-            promptInput.disabled = true;
-            micBtn.disabled = true;
-
-            try {
-              const response = await getBotResponse(transcript);
-              addMessage(response, 'bot');
-            } catch (err) {
-              addMessage('Oops! Something went wrong.', 'bot');
-              console.error(err);
-            } finally {
-              promptInput.disabled = false;
-              micBtn.disabled = false;
-              promptInput.focus();
-            }
-          }
-        }
-      };
+      });
 
       micBtn.addEventListener('click', () => {
-        if (recognizing) {
+        if (micBtn.classList.contains('recording')) {
           recognition.stop();
-          return;
+        } else {
+          recognition.start();
+          micBtn.classList.add('recording');
+          micBtn.setAttribute('aria-label', 'Stop voice input');
+          chatInput.focus();
         }
-        recognition.start();
       });
     } else {
-      micBtn.disabled = true;
-      micBtn.title = 'Voice recognition not supported in this browser.';
+      // Hide mic button if speech recognition not supported
+      micBtn.style.display = 'none';
     }
+
+    // Accessibility: focus input on page load
+    window.addEventListener('load', () => {
+      chatInput.focus();
+    });
   </script>
 </body>
 </html>

@@ -1,2 +1,2 @@
 # HackClubAssisstant
-A project I made for a hackathon that uses an API for azure. It is a voice assistant bot.
+A project we made for a hackathon that uses llama's API. It is a voice assistant bot.

@@ -1,1 +1,14 @@
-
+body {
+    padding: 25px;
+    background-color:  #000020
+  ;
+   
+  }
+  .title {
+  color:  #e6ffff;
+  }
+  
+  .currentTime {
+    color: #ffffff;
+  }
+  

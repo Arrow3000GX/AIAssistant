@@ -5,6 +5,7 @@
   <style>
     body { font-family: sans-serif; margin: 20px; max-width: 600px; }
     textarea { width: 100%; height: 80px; margin-bottom: 10px; }
+    button { padding: 10px 20px; margin-bottom: 10px; }
     pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
   </style>
 </head>
@@ -15,44 +16,14 @@
   <pre id="log"></pre>
 
   <script>
-    const chat = document.getElementById("chat");
-    const form = document.getElementById("chatForm");
-    const input = document.getElementById("userInput");
+    const apiKey = "31d03ef652251c5514b702756f922b75ddecd57e0fe4e0808ebb01915af4c1d2";
 
-    const AZURE_API_KEY = "AAfjitrqlau6uN6Z3n8VWQMj9cCzRh8azSkovekZG85srRD6MC01JQQJ99BDACmepeSXJ3w3AAAFACOGysZT";
-    const AZURE_ENDPOINT = "https://seerapi.cognitiveservices.azure.com/";
-    const DEPLOYMENT_NAME = "gpt35";
-    const API_VERSION = "2023-03-15-preview";
+    async function send() {
+      const input = document.getElementById("input").value;
+      const log = document.getElementById("log");
+      log.textContent += `👤 You: ${input}\n`;
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const userMsg = input.value.trim();
-      if (!userMsg) return;
-
-      appendMessage("user", userMsg);
-      input.value = "";
-
-      try {
-        const botMsg = await getBotResponse(userMsg);
-        appendMessage("bot", botMsg);
-      } catch (err) {
-        console.error("Error:", err);
-        appendMessage("bot", "⚠️ Error: Could not reach AI.");
-      }
-    });
-
-    async function getBotResponse(message) {
-      const url = `${AZURE_ENDPOINT}openai/deployments/${DEPLOYMENT_NAME}/chat/completions?api-version=${API_VERSION}`;
-      const headers = {
-        "Content-Type": "application/json",
-        "api-key": AZURE_API_KEY
-      };
-      const body = JSON.stringify({
-        messages: [{ role: "user", content: message }],
-        max_tokens: 1000
-      });
-
-      const response = await fetch(url, {
+      const response = await fetch("https://api.together.xyz/v1/chat/completions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${apiKey}`,
@@ -67,7 +38,7 @@
       });
 
       const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content || "No response.";
+      const reply = data?.choices?.[0]?.message?.content || "❌ No response from model.";
       log.textContent += `🤖 AI: ${reply.trim()}\n\n`;
       document.getElementById("input").value = "";
     }
